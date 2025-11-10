@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface TrailerModalProps {
   videoId: string;
@@ -11,8 +11,14 @@ const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+const Spinner: React.FC = () => (
+    <div className="w-16 h-16 border-4 border-slate-600 border-t-emerald-400 rounded-full animate-spin"></div>
+);
+
 
 export const TrailerModal: React.FC<TrailerModalProps> = ({ videoId, onClose }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -41,18 +47,24 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({ videoId, onClose }) 
         <h2 id="trailer-modal-title" className="sr-only">Movie Trailer</h2>
         <button 
             onClick={onClose}
-            className="absolute -top-4 -right-4 z-10 w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:bg-gray-200 transition-all duration-300 shadow-lg"
+            className="absolute -top-4 -right-4 z-20 w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:bg-gray-200 transition-all duration-300 shadow-lg"
             aria-label="Close trailer"
         >
             <CloseIcon className="w-6 h-6" />
         </button>
+        {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black rounded-lg">
+                <Spinner />
+            </div>
+        )}
         <iframe
-          className="absolute top-0 left-0 w-full h-full rounded-lg"
+          className={`absolute top-0 left-0 w-full h-full rounded-lg transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
           src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
           title="YouTube video player"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+          onLoad={() => setIsLoading(false)}
         ></iframe>
       </div>
     </div>

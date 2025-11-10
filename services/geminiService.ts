@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import type { Movie } from '../types';
 
@@ -17,44 +18,48 @@ interface MovieFromAPI {
   youtubeVideoId: string | null;
 }
 
-
 export const getMovieRecommendations = async (prompt: string, existingTitles: string[] = []): Promise<Movie[]> => {
   try {
     const exclusionPrompt = existingTitles.length > 0 
       ? `Please exclude the following movies from the recommendations: ${existingTitles.join(', ')}.` 
       : '';
 
+    const fullPrompt = `Based on the following user request, recommend 20 movies. ${exclusionPrompt} User request: "${prompt}"
+
+Return the result as a raw JSON array of objects with the following structure: { "title": string, "year": number, "summary": string, "genres": string[], "tmdbPosterPath": string | null, "youtubeVideoId": string | null }. Do not wrap the JSON in markdown backticks or any other text.`;
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `Based on the following user request, recommend 20 movies. ${exclusionPrompt} User request: "${prompt}"`,
+      contents: fullPrompt,
       config: {
-        systemInstruction: "You are a movie recommendation AI. Your goal is to return a valid JSON array of movie objects. Each object must have these properties: 'title', 'year', 'summary', 'genres', 'tmdbPosterPath', and 'youtubeVideoId'. For the 'tmdbPosterPath', you must use Google Search to find the movie on 'The Movie Database (TMDb)' and return the exact value of the 'poster_path' field for that movie. It should be a string starting with a forward slash, like '/path/to/image.jpg'. If you cannot find a valid TMDb poster path, return null. For all other data, use Google Search to ensure accuracy. Respond ONLY with the JSON array, without any additional text or markdown.",
+        systemInstruction: "You are a movie recommendation AI. Your goal is to return a raw JSON array of movie objects. For each movie, use Google Search to find accurate information. For 'tmdbPosterPath', find the movie on 'The Movie Database (TMDb)' and return the exact value of the 'poster_path' field (e.g., '/path/to/image.jpg'). For 'youtubeVideoId', find the official trailer on YouTube and return only its video ID. If a value cannot be reliably found, return null for that field. Your response MUST be only the raw JSON array, without any surrounding text, markdown, or explanations.",
         tools: [{googleSearch: {}}],
       },
     });
 
+    // Handle cases where the response might be blocked due to safety settings.
+    if (!response.text && response.promptFeedback?.blockReason) {
+        const { blockReason, blockReasonMessage } = response.promptFeedback;
+        console.error(`API response blocked. Reason: ${blockReason}`, blockReasonMessage);
+        throw new Error(`Your request was blocked for safety reasons (${blockReason}). Please try a different, more general query.`);
+    }
+
     const rawResponseText = response.text;
 
     if (!rawResponseText || rawResponseText.trim() === '') {
-        console.error("Received empty response from API. This might be due to a safety block.");
-        throw new Error("The AI returned an empty response. This can happen if the search query is blocked for safety reasons. Please try a different query.");
+        console.error("Received empty response from API. This could be due to a content filter or other issue.");
+        throw new Error("The AI returned an empty response. This can happen if the search query is too restrictive or triggers a content filter. Please try a different query.");
     }
     
-    const trimmedText = rawResponseText.trim();
-    
-    // The model might wrap the JSON in markdown or add explanatory text.
-    // We'll find the start of the array '[' and the end of the array ']' to extract the JSON.
-    const startIndex = trimmedText.indexOf('[');
-    const endIndex = trimmedText.lastIndexOf(']');
-    
-    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-        console.error("Invalid response format received from API:", trimmedText);
-        throw new Error("Failed to parse movie recommendations. The AI returned an unexpected format without a valid JSON array.");
+    // Clean the response to ensure it's valid JSON, as the model might still wrap it in markdown.
+    const jsonMatch = rawResponseText.match(/(\[[\s\S]*\])/);
+    if (!jsonMatch || jsonMatch.length < 2) {
+        console.error("Invalid JSON array format from API:", rawResponseText);
+        throw new Error("The AI returned data in an unexpected format that could not be parsed.");
     }
-
-    const jsonText = trimmedText.substring(startIndex, endIndex + 1);
+    const jsonString = jsonMatch[1];
     
-    const recommendationsFromApi: MovieFromAPI[] = JSON.parse(jsonText);
+    const recommendationsFromApi: MovieFromAPI[] = JSON.parse(jsonString);
     
     const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w780';
 
@@ -74,10 +79,11 @@ export const getMovieRecommendations = async (prompt: string, existingTitles: st
   } catch (error) {
     console.error("Error fetching movie recommendations:", error);
     if (error instanceof SyntaxError) {
-        throw new Error("Failed to parse movie recommendations. The AI returned an invalid format.");
+        throw new Error("Failed to parse movie recommendations. The AI returned an invalid JSON format.");
     }
     if (error instanceof Error) {
-        throw new Error(`Failed to get recommendations from Gemini API: ${error.message}`);
+        // Pass our custom errors or Gemini API errors through directly
+        throw error;
     }
     throw new Error("An unknown error occurred while fetching recommendations.");
   }

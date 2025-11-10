@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import type { Movie } from './types';
 import { getMovieRecommendations } from './services/geminiService';
 import { SearchBar } from './components/SearchBar';
@@ -6,8 +6,9 @@ import { MovieCard } from './components/MovieCard';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorDisplay } from './components/ErrorDisplay';
 import { HeroSection } from './components/HeroSection';
-import { TrailerModal } from './components/TrailerModal';
 import { Categories } from './components/Categories';
+
+const TrailerModal = lazy(() => import('./components/TrailerModal').then(module => ({ default: module.TrailerModal })));
 
 const App: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -175,7 +176,9 @@ const App: React.FC = () => {
         </div>
       </div>
       {selectedTrailerId && (
-        <TrailerModal videoId={selectedTrailerId} onClose={handleCloseTrailer} />
+        <Suspense fallback={<div />}>
+          <TrailerModal videoId={selectedTrailerId} onClose={handleCloseTrailer} />
+        </Suspense>
       )}
     </>
   );
