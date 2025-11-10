@@ -20,6 +20,13 @@ const App: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('Popular');
   const [selectedTrailerId, setSelectedTrailerId] = useState<string | null>(null);
 
+  // State for "Find Similar" feature
+  const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState<boolean>(false);
+  const [similarMoviesError, setSimilarMoviesError] = useState<string | null>(null);
+  const [originalQueryTitle, setOriginalQueryTitle] = useState<string | null>(null);
+
+
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Initial Load Effect
@@ -56,6 +63,9 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setMovies([]);
+    setSimilarMovies([]); // Clear similar movies on new search
+    setOriginalQueryTitle(null);
+    setSimilarMoviesError(null);
     setHasSearched(true);
     setCurrentQuery(query);
 
@@ -96,6 +106,32 @@ const App: React.FC = () => {
     }
   };
 
+  const handleFindSimilar = async (movie: Movie) => {
+    setIsLoadingSimilar(true);
+    setSimilarMoviesError(null);
+    setSimilarMovies([]);
+    setOriginalQueryTitle(movie.title);
+
+    // Use a timeout to allow the UI to update before scrolling
+    setTimeout(() => {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
+
+    try {
+        const prompt = `Find movies that are similar in tone, genre, and style to "${movie.title}". The movie is described as: "${movie.summary}" and its genres are ${movie.genres.join(', ')}.`;
+        const existingTitles = [...movies.map(m => m.title), ...similarMovies.map(m => m.title), movie.title];
+        const results = await getMovieRecommendations(prompt, existingTitles);
+        setSimilarMovies(results);
+    } catch (err) {
+        setSimilarMoviesError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+    } finally {
+        setIsLoadingSimilar(false);
+    }
+  };
+
   const handleOpenTrailer = (videoId: string) => {
     setSelectedTrailerId(videoId);
   };
@@ -120,6 +156,7 @@ const App: React.FC = () => {
               movie={movie} 
               index={index}
               onWatchTrailer={handleOpenTrailer}
+              onFindSimilar={handleFindSimilar}
             />
           ))}
         </div>
@@ -171,6 +208,31 @@ const App: React.FC = () => {
               >
                 {isShowingMore ? 'Loading More...' : 'Show More'}
               </button>
+            </div>
+          )}
+
+          {/* Similar Movies Section */}
+          {(originalQueryTitle || isLoadingSimilar || similarMoviesError) && (
+            <div className="mt-16 w-full animate-fade-in">
+              {originalQueryTitle && <h2 className="text-3xl font-bold text-slate-200 mb-8 text-center">Because you liked {originalQueryTitle}...</h2>}
+              
+              {isLoadingSimilar && <LoadingSpinner />}
+              
+              {similarMoviesError && !isLoadingSimilar && <div className="max-w-2xl mx-auto"><ErrorDisplay message={similarMoviesError} /></div>}
+              
+              {similarMovies.length > 0 && !isLoadingSimilar && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+                  {similarMovies.map((movie, index) => (
+                    <MovieCard
+                      key={`similar-${movie.title}-${index}`}
+                      movie={movie}
+                      index={index}
+                      onWatchTrailer={handleOpenTrailer}
+                      onFindSimilar={handleFindSimilar}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

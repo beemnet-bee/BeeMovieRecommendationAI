@@ -5,6 +5,7 @@ interface MovieCardProps {
   movie: Movie;
   index: number;
   onWatchTrailer: (videoId: string) => void;
+  onFindSimilar: (movie: Movie) => void;
 }
 
 const FilmReelPlaceholder: React.FC = () => (
@@ -27,8 +28,14 @@ const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+const SparklesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.846.813l2.846-.813a.75.75 0 0 1 .976.976l-.813 2.846a3.75 3.75 0 0 0 .813 2.846l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-.813 2.846l.813 2.846a.75.75 0 0 1-.976.976l-2.846-.813a3.75 3.75 0 0 0-2.846.813l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.846-.813l-2.846.813a.75.75 0 0 1-.976-.976l.813-2.846a3.75 3.75 0 0 0-.813-2.846l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813a3.75 3.75 0 0 0 .813-2.846l-.813-2.846a.75.75 0 0 1 .976-.976l2.846.813a3.75 3.75 0 0 0 2.846-.813l.813-2.846A.75.75 0 0 1 9 4.5ZM18.75 12a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008ZM16.5 8.25a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75V8.25Z" clipRule="evenodd" />
+    </svg>
+);
 
-export const MovieCard: React.FC<MovieCardProps> = ({ movie, index, onWatchTrailer }) => {
+
+export const MovieCard: React.FC<MovieCardProps> = ({ movie, index, onWatchTrailer, onFindSimilar }) => {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -42,12 +49,14 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index, onWatchTrail
     const rotateX = ((y / height) - 0.5) * -25; // Invert for natural feel
     const rotateY = ((x / width) - 0.5) * 25;
     
-    cardRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+    cardRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.07, 1.07, 1.07)`;
+    cardRef.current.style.boxShadow = '0px 30px 40px -15px rgba(0, 204, 136, 0.3)';
   };
 
   const handleMouseLeave = () => {
       if (!cardRef.current) return;
       cardRef.current.style.transform = 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      cardRef.current.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
   };
 
   return (
@@ -55,7 +64,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index, onWatchTrail
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="group relative bg-slate-800 rounded-2xl overflow-hidden shadow-2xl shadow-black/30 opacity-0 animate-card-enter transition-transform duration-100 ease-out [transform-style:preserve-3d]"
+      className="group relative bg-slate-800 rounded-2xl overflow-hidden shadow-2xl shadow-black/30 opacity-0 animate-card-enter transition-all duration-300 ease-out [transform-style:preserve-3d]"
       style={{ animationDelay }}
     >
       <div className="relative w-full bg-slate-800 aspect-[2/3] overflow-hidden [transform:translateZ(20px)] transition-transform duration-300 group-hover:[transform:translateZ(0px)]">
@@ -97,15 +106,25 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index, onWatchTrail
                   </span>
               ))}
             </div>
-            {movie.youtubeVideoId && (
-              <button
-                  onClick={() => onWatchTrailer(movie.youtubeVideoId!)}
-                  className="w-full flex items-center justify-center gap-2 text-sm text-white bg-gradient-to-r from-emerald-400 to-[#00cc88] hover:opacity-90 px-4 py-2.5 rounded-lg font-bold transition-opacity duration-300"
-              >
-                  <PlayIcon className="w-5 h-5" />
-                  <span>Watch Trailer</span>
-              </button>
-            )}
+            <div className="flex items-stretch gap-2">
+                {movie.youtubeVideoId && (
+                    <button
+                        onClick={() => onWatchTrailer(movie.youtubeVideoId!)}
+                        className="flex-grow w-full flex items-center justify-center gap-2 text-sm text-white bg-gradient-to-r from-emerald-400 to-[#00cc88] hover:opacity-90 px-4 py-2.5 rounded-lg font-bold transition-opacity duration-300"
+                    >
+                        <PlayIcon className="w-5 h-5" />
+                        <span>Trailer</span>
+                    </button>
+                )}
+                <button
+                    onClick={() => onFindSimilar(movie)}
+                    className={`${!movie.youtubeVideoId ? 'w-full' : 'flex-shrink-0'} flex items-center justify-center gap-2 text-sm text-white bg-slate-700/80 hover:bg-slate-700 px-4 py-2.5 rounded-lg font-bold transition-colors duration-300`}
+                    title="Find similar movies"
+                >
+                    <SparklesIcon className="w-5 h-5" />
+                    <span>Similar</span>
+                </button>
+            </div>
         </div>
       </div>
 
