@@ -2,11 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Movie } from '../types';
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable is not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
 
 // Internal type for the raw API response to make processing more robust
 interface MovieFromAPI {
