@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import type { Movie } from './types';
 import { getMovieRecommendations } from './services/geminiService';
@@ -12,7 +13,7 @@ const TrailerModal = lazy(() => import('./components/TrailerModal').then(module 
 
 const App: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isShowingMore, setIsShowingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
@@ -25,6 +26,7 @@ const App: React.FC = () => {
   // Initial Load Effect
   useEffect(() => {
     handleCategorySelect('Popular');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -153,7 +155,6 @@ const App: React.FC = () => {
           {hasSearched ? (
             <Categories activeCategory={activeCategory} onSelectCategory={handleCategorySelect} />
           ) : (
-            // This is shown very briefly before the initial load kicks in
             <HeroSection onExampleClick={handleSearch} />
           )}
 
