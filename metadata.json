@@ -1,0 +1,5 @@
+{
+  "name": "Movie Recommendation AI",
+  "description": "An AI-powered movie recommendation application that suggests films based on your mood and preferences. Describe what you want to watch, and let Gemini find the perfect movies for you.",
+  "requestFramePermissions": []
+}

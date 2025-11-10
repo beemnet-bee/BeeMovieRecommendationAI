@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Recommendation AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Ubuntu', 'sans-serif'],
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+              'slide-up': 'slideUp 0.5s ease-in-out',
+              'spin-slow': 'spin 3s linear infinite',
+              'aurora': 'aurora 60s linear infinite',
+              'card-enter': 'cardEnter 0.6s ease-out forwards',
+              'shimmer': 'shimmer 4s ease-in-out infinite',
+              'placeholder-shimmer': 'placeholderShimmer 1.5s infinite linear',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(20px)', opacity: 0 },
+                '100%': { transform: 'translateY(0)', opacity: 1 },
+              },
+              aurora: {
+                '0%': { 'background-position': '0% 50%' },
+                '50%': { 'background-position': '100% 50%' },
+                '100%': { 'background-position': '0% 50%' },
+              },
+              cardEnter: {
+                '0%': { transform: 'translateY(30px) scale(0.95)', opacity: 0 },
+                '100%': { transform: 'translateY(0) scale(1)', opacity: 1 },
+              },
+              shimmer: {
+                '0%, 100%': { 'background-position': '0% 50%' },
+                '50%': { 'background-position': '100% 50%' },
+              },
+              placeholderShimmer: {
+                '0%': { backgroundPosition: '-200% 0' },
+                '100%': { backgroundPosition: '200% 0' },
+              }
+            }
+          },
+        },
+        plugins: [],
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0"
+  }
+}
+</script>
+<style>
+    /* Custom Scrollbar for Webkit Browsers */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #000000; /* True black background */
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #334155; /* Corresponds to bg-slate-700 */
+      border-radius: 20px;
+      border: 3px solid #000000; /* Adds a track-colored border */
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: #475569; /* Corresponds to bg-slate-600 */
+    }
+
+    /* Film Grain Effect */
+    .film-grain::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAMFBMVEVMaXH////////////////////////////////////////////////////////////6w4mEAAAAD3RSTlMA1sy7vVEiM5d52Jd3iIeDk5A7AAAA5UlEQVQ4y63UsQkCQQAE0DEQWBgYWFj+4B/44P/GGFhY+A8WQvAEFhYWdoBwsCAYGFhY2AgIWFhY2Nng1wxigzF8F/28veb22trbY2Oca2trm2trm3NdY2N9bW19bW1t/D5gIAkGk2AwaS4DBpOgMHEuBQaTIDB5LkQGkyAweS5DxpMgMHkuAwaTIDB5LkMGk2AweS5DBpOgMHkuQwYTYDB5LkMGk6AweS5DBpMgMHkuAwaTYDB5LkMGk2AweS5DBpOgMHkuQwYTYDA5LkBMe9aAAAAAElFTSuQmCC');
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Cursor Spotlight Effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(
+        800px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
+        rgba(255, 255, 255, 0.075),
+        transparent 80%
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+</style>
+</head>
+  <body class="bg-black overflow-x-hidden font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
